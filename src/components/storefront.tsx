@@ -1,0 +1,184 @@
+import { useMemo, useState } from "react";
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  Clock3,
+  Copy,
+  Headphones,
+  PackageCheck,
+  ShieldCheck,
+  Sparkles,
+  X,
+  Zap,
+} from "lucide-react";
+
+import cashStack from "@/assets/cash-stack.png.asset.json";
+import spawnerImage from "@/assets/skeleton-spawner.png.asset.json";
+import { Button } from "@/components/ui/button";
+
+type Product = "money" | "spawners";
+type Order = { code: string; item: string; total: string };
+
+const packages = [
+  { amount: 100, label: "100M", price: 2.57, was: 2.86, discount: 10 },
+  { amount: 500, label: "500M", price: 11.43, was: 14.29, discount: 20 },
+  { amount: 1000, label: "1B", price: 20, was: 28.57, discount: 30, popular: true },
+  { amount: 2000, label: "2B", price: 40, was: 57.14, discount: 30 },
+  { amount: 5000, label: "5B", price: 100, was: 142.86, discount: 30 },
+];
+
+const reviews = [
+  ["k****o", "nice service w", 5],
+  ["o****a", "fast and cheapest nice", 4],
+  ["r******2", "wtf w they did not scam me lol", 5],
+];
+
+const faqs = [
+  ["How much does DonutSMP money cost?", "Our 1B package is $20. Smaller packages start at $2.57, and larger orders save up to 30%."],
+  ["How fast is delivery?", "Most orders arrive in a few minutes. At busy times, a team member may need a little longer."],
+  ["What do you need from me?", "Your exact Minecraft username and the order code we generate for you."],
+  ["Is this safe?", "We never ask for your password. Every order is confirmed and delivered manually."],
+];
+
+function makeCode(prefix: string) {
+  const chars = Math.random().toString(36).slice(2, 8).toUpperCase();
+  return `${prefix}-${chars}`;
+}
+
+export function Storefront() {
+  const [product, setProduct] = useState<Product>("money");
+  const [custom, setCustom] = useState("1b");
+  const [spawners, setSpawners] = useState(20);
+  const [order, setOrder] = useState<Order | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const customAmount = useMemo(() => {
+    const match = custom.trim().toLowerCase().match(/^(\d+(?:\.\d+)?)\s*(m|b)?$/);
+    if (!match) return null;
+    const value = Number(match[1]);
+    const millions = match[2] === "b" ? value * 1000 : value;
+    return millions >= 50 && millions <= 10000 ? millions : null;
+  }, [custom]);
+  const customPrice = customAmount ? customAmount * 0.02 : 0;
+  const spawnerDiscount = Math.min(30, Math.round(Math.max(0, spawners - 20) * 0.375));
+  const spawnerTotal = spawners * 0.4 * (1 - spawnerDiscount / 100);
+
+  function openOrder(item: string, total: string, prefix: string) {
+    setCopied(false);
+    setOrder({ code: makeCode(prefix), item, total });
+  }
+
+  async function copyCode() {
+    if (!order) return;
+    await navigator.clipboard.writeText(order.code);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <div className="min-h-screen overflow-hidden bg-background text-foreground">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+          <a href="#top" className="flex items-center gap-2 font-display text-base font-extrabold">
+            <span className="grid size-7 place-items-center rounded-md bg-primary text-primary-foreground">$</span>
+            DONUT<span className="text-primary">CASH</span>
+          </a>
+          <nav className="hidden items-center gap-6 text-xs font-semibold text-muted-foreground sm:flex">
+            <a className="nav-link" href="#shop">SHOP</a>
+            <a className="nav-link" href="#how">HOW IT WORKS</a>
+            <a className="nav-link" href="#reviews">REVIEWS</a>
+            <a className="nav-link" href="#faq">FAQ</a>
+          </nav>
+          <Button asChild size="sm"><a href="#shop">Buy now <ArrowRight /></a></Button>
+        </div>
+      </header>
+
+      <main>
+        <section id="top" className="relative mx-auto grid min-h-[540px] max-w-6xl items-center gap-6 px-4 py-10 md:grid-cols-[1.05fr_.95fr] md:py-14">
+          <div className="relative z-10 animate-rise">
+            <div className="mb-5 inline-flex items-center gap-2 border border-primary/30 bg-primary/8 px-3 py-1.5 text-xs font-bold text-primary">
+              <span className="status-dot" /> 1,037M IN STOCK · UP TO 30% OFF
+            </div>
+            <h1 className="max-w-3xl font-display text-5xl font-extrabold leading-[.95] md:text-7xl">
+              Stack cash.<br /><span className="text-primary">Skip the grind.</span>
+            </h1>
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg">
+              DonutSMP money and spawners delivered manually by real players. No passwords. No waiting around.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <Button asChild size="lg"><a href="#shop">Shop packages <ArrowRight /></a></Button>
+              <span className="text-sm text-muted-foreground"><strong className="text-foreground">1B = $20</strong> · instant order code</span>
+            </div>
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-t border-border pt-5 text-xs font-semibold text-muted-foreground">
+              <span className="flex items-center gap-2"><PackageCheck className="text-primary" /> 1,200+ delivered</span>
+              <span className="flex items-center gap-2"><Clock3 className="text-primary" /> Fast manual delivery</span>
+              <span className="flex items-center gap-2"><Headphones className="text-primary" /> 24/7 support</span>
+            </div>
+          </div>
+          <div className="hero-art relative mx-auto w-full max-w-[480px] animate-float">
+            <img src={cashStack.url} alt="Stack of DonutSMP cash and coins" className="relative z-10 aspect-square w-full object-contain" />
+            <div className="absolute bottom-[9%] right-[4%] z-20 border border-gold/40 bg-background/90 px-4 py-3 shadow-2xl backdrop-blur-md">
+              <span className="block text-[10px] font-bold text-muted-foreground">BEST VALUE</span>
+              <strong className="font-display text-xl text-gold">30% OFF</strong>
+            </div>
+          </div>
+        </section>
+
+        <section id="shop" className="border-y border-border bg-panel/55 py-12 md:py-14">
+          <div className="mx-auto max-w-6xl px-4">
+            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+              <div><p className="eyebrow">STORE</p><h2 className="section-title">Choose your boost</h2></div>
+              <div className="flex w-full max-w-xs border border-border bg-background p-1">
+                {(["money", "spawners"] as Product[]).map((item) => <Button key={item} size="sm" variant={product === item ? "default" : "ghost"} className="flex-1" onClick={() => setProduct(item)}>{item === "money" ? "$ Money" : "◆ Spawners"}</Button>)}
+              </div>
+            </div>
+
+            {product === "money" ? (
+              <div className="mt-7 animate-tab-in">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {packages.map((item, index) => (
+                    <article key={item.label} style={{ "--delay": `${index * 50}ms` } as React.CSSProperties} className={`product-card stagger-in ${item.popular ? "featured-card" : ""}`}>
+                      <div className="flex items-center justify-between"><span className="text-xs font-bold text-muted-foreground">DONUTSMP MONEY</span><span className="sale-tag">-{item.discount}%</span></div>
+                      <div className="mt-5 flex items-end justify-between gap-4"><strong className="font-display text-4xl">{item.label}</strong><div className="text-right"><strong className="block font-display text-2xl text-primary">${item.price.toFixed(2)}</strong><span className="text-xs text-muted-foreground line-through">${item.was.toFixed(2)}</span></div></div>
+                      <Button className="mt-5 w-full" variant={item.popular ? "default" : "secondary"} onClick={() => openOrder(`${item.label} DonutSMP money`, `$${item.price.toFixed(2)}`, `C${item.amount}`)}>Get {item.label} <ArrowRight /></Button>
+                      {item.popular && <span className="popular-flag"><Sparkles /> MOST POPULAR</span>}
+                    </article>
+                  ))}
+                  <article className="product-card border-dashed">
+                    <div className="flex items-center justify-between"><span className="text-xs font-bold text-muted-foreground">CUSTOM AMOUNT</span><span className="sale-tag">-30%</span></div>
+                    <label className="mt-4 block text-xs font-semibold" htmlFor="custom">50M — 10B</label>
+                    <input id="custom" className="store-input mt-2" value={custom} onChange={(event) => setCustom(event.target.value)} placeholder="e.g. 2.5b" />
+                    <Button className="mt-4 w-full" disabled={!customAmount} onClick={() => customAmount && openOrder(`${custom.toUpperCase()} DonutSMP money`, `$${customPrice.toFixed(2)}`, `C${customAmount}`)}>{customAmount ? `$${customPrice.toFixed(2)} · Continue` : "Enter a valid amount"}</Button>
+                  </article>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-7 grid animate-tab-in border border-border bg-card md:grid-cols-[280px_1fr]">
+                <div className="grid min-h-64 place-items-center border-b border-border bg-background/60 p-6 md:border-b-0 md:border-r"><img src={spawnerImage.url} alt="Minecraft skeleton spawner" className="w-52 animate-float object-contain" /></div>
+                <div className="p-6 md:p-8"><div className="flex justify-between gap-4"><div><p className="eyebrow">527 IN STOCK</p><h3 className="mt-2 font-display text-3xl font-bold">Skeleton spawners</h3></div><div className="text-right"><strong className="font-display text-3xl text-primary">${spawnerTotal.toFixed(2)}</strong><span className="block text-xs text-muted-foreground">{spawnerDiscount}% bulk discount</span></div></div><div className="mt-8 flex items-center gap-4"><input aria-label="Spawner quantity" type="range" min="1" max="100" value={spawners} onChange={(event) => setSpawners(Number(event.target.value))} className="min-w-0 flex-1 accent-primary" /><input aria-label="Spawner count" type="number" min="1" max="100" value={spawners} onChange={(event) => setSpawners(Math.min(100, Math.max(1, Number(event.target.value))))} className="store-input w-20 text-center" /></div><div className="mt-2 flex justify-between text-xs text-muted-foreground"><span>1 spawner</span><span>100 spawners</span></div><Button className="mt-7 w-full" onClick={() => openOrder(`${spawners} skeleton spawners`, `$${spawnerTotal.toFixed(2)}`, `S${spawners}`)}>Get {spawners} spawners <ArrowRight /></Button></div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section id="how" className="mx-auto max-w-6xl px-4 py-12 md:py-14">
+          <div className="grid gap-8 lg:grid-cols-[.75fr_1.25fr] lg:items-start">
+            <div><p className="eyebrow">ZERO FRICTION</p><h2 className="section-title">Three steps.<br />Then you’re stacked.</h2><p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">Your order gets a unique code. Send it to our Discord team and we handle the rest in-game.</p></div>
+            <ol className="grid gap-px border border-border bg-border sm:grid-cols-3">
+              {[["01", "Pick", "Choose cash or spawners."], ["02", "Message", "Send your code and IGN."], ["03", "Receive", "Meet our team in-game."]].map(([number, title, copy]) => <li key={number} className="step bg-background p-5"><span className="font-display text-sm font-bold text-primary">{number}</span><h3 className="mt-8 font-display text-xl font-bold">{title}</h3><p className="mt-2 text-sm text-muted-foreground">{copy}</p></li>)}
+            </ol>
+          </div>
+        </section>
+
+        <section id="reviews" className="border-y border-border bg-panel/55 py-12"><div className="mx-auto max-w-6xl px-4"><div className="flex items-end justify-between"><div><p className="eyebrow">PLAYER PROOF</p><h2 className="section-title">4.8 / 5 from the community</h2></div><span className="hidden text-gold sm:block">★★★★★</span></div><div className="mt-6 grid gap-3 md:grid-cols-3">{reviews.map(([name, text, rating]) => <blockquote key={String(name)} className="review-card"><span className="text-gold">{"★".repeat(Number(rating))}</span><p className="mt-4 text-sm">“{text}”</p><footer className="mt-4 text-xs font-bold text-muted-foreground">{name}</footer></blockquote>)}</div></div></section>
+
+        <section id="faq" className="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-[.6fr_1.4fr] md:py-14"><div><p className="eyebrow">FAQ</p><h2 className="section-title">Quick answers</h2><div className="mt-5 flex items-center gap-2 text-sm text-muted-foreground"><ShieldCheck className="text-primary" /> Never share your password.</div></div><div className="divide-y divide-border border-y border-border">{faqs.map(([question, answer]) => <details key={question} className="group"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-semibold">{question}<ChevronDown className="text-primary transition-transform group-open:rotate-180" /></summary><p className="faq-copy pb-5 pr-10 text-sm leading-relaxed text-muted-foreground">{answer}</p></details>)}</div></section>
+      </main>
+
+      <footer className="border-t border-border"><div className="mx-auto flex max-w-6xl flex-col justify-between gap-3 px-4 py-7 text-xs text-muted-foreground sm:flex-row"><span className="font-display font-bold text-foreground">DONUT<span className="text-primary">CASH</span></span><span>© 2026 donutcash.shop · Not affiliated with DonutSMP.</span></div></footer>
+
+      {order && <div className="modal-backdrop fixed inset-0 z-50 grid place-items-center bg-background/85 p-4 backdrop-blur-md" role="dialog" aria-modal="true"><div className="modal-card relative w-full max-w-md border border-primary/35 bg-card p-6 shadow-2xl"><Button variant="ghost" size="icon" className="absolute right-3 top-3" onClick={() => setOrder(null)} aria-label="Close order"><X /></Button><div className="grid size-11 place-items-center rounded-md bg-primary/12 text-primary"><Check /></div><p className="eyebrow mt-5">ORDER CREATED</p><h2 className="mt-2 font-display text-2xl font-bold">Finish on Discord</h2><p className="mt-2 text-sm text-muted-foreground">Copy this code and send it with your Minecraft username to our delivery team.</p><div className="mt-5 border border-border bg-background p-4"><div className="flex items-center justify-between gap-3"><code className="font-display text-lg font-bold text-primary">{order.code}</code><Button size="icon" variant="secondary" onClick={copyCode} aria-label="Copy order code">{copied ? <Check /> : <Copy />}</Button></div><div className="mt-3 flex justify-between border-t border-border pt-3 text-xs text-muted-foreground"><span>{order.item}</span><strong className="text-foreground">{order.total}</strong></div></div><Button className="mt-5 w-full" onClick={copyCode}>{copied ? "Copied" : "Copy order code"}</Button></div></div>}
+    </div>
+  );
+}

@@ -22,17 +22,17 @@ type Order = { code: string; item: string; total: string };
 const DISCORD_URL = "https://discord.gg/9FHdCBQAx";
 const MONEY_STOCK = 1037; // in millions
 const SPAWNER_STOCK = 527;
-const BASE_RATE = 0.02857; // $ per million before discount
+const BASE_RATE = 0.042857; // $ per million before discount (1B = $30 after 30% off)
 
 const cashStack = "/images/cash-stack.png";
 const spawnerImage = "/images/skeleton-spawner.png";
 
 const packages = [
-  { amount: 100, label: "100M", price: 2.57, was: 2.86, discount: 10 },
-  { amount: 500, label: "500M", price: 11.43, was: 14.29, discount: 20 },
-  { amount: 1000, label: "1B", price: 20, was: 28.57, discount: 30, popular: true },
-  { amount: 2000, label: "2B", price: 40, was: 57.14, discount: 30 },
-  { amount: 5000, label: "5B", price: 100, was: 142.86, discount: 30 },
+  { amount: 100, label: "100M", price: 3.86, was: 4.29, discount: 10 },
+  { amount: 500, label: "500M", price: 17.14, was: 21.43, discount: 20 },
+  { amount: 1000, label: "1B", price: 30, was: 42.86, discount: 30, popular: true },
+  { amount: 2000, label: "2B", price: 60, was: 85.71, discount: 30 },
+  { amount: 5000, label: "5B", price: 150, was: 214.29, discount: 30 },
 ];
 
 const reviews = [
@@ -44,13 +44,11 @@ const reviews = [
 ];
 
 const faqs = [
-  ["How much does DonutSMP money cost?", "Our 1B package is $20. Smaller packages start at $2.57, and the more you buy the bigger the discount, up to 30%."],
+  ["How much does DonutSMP money cost?", "Our 1B package is $30. Smaller packages start at $3.86, and the more you buy the bigger the discount, up to 30%."],
   ["How fast is delivery?", "Most orders arrive in a few minutes. At busy times, a team member may need a little longer."],
   ["What do you need from me?", "Your exact Minecraft username and the order code we generate for you."],
   ["Is this safe?", "We never ask for your password. Every order is confirmed and delivered manually."],
 ];
-
-const loadingSteps = ["Reserving your amount", "Generating order code", "Notifying delivery team"];
 
 function makeCode(prefix: string) {
   const chars = Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -94,12 +92,10 @@ export function Storefront() {
     setLoadingStep(0);
     timers.current.forEach(window.clearTimeout);
     timers.current = [
-      window.setTimeout(() => setLoadingStep(1), 750),
-      window.setTimeout(() => setLoadingStep(2), 1500),
       window.setTimeout(() => {
         setLoadingStep(-1);
         setOrder({ code: makeCode(prefix), item, total });
-      }, 2350),
+      }, 900),
     ];
   }
 
@@ -122,7 +118,7 @@ export function Storefront() {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <a href="#top" className="flex items-center gap-2 font-display text-base font-extrabold">
             <span className="grid size-7 place-items-center rounded-md bg-primary text-primary-foreground">$</span>
-            DONUTCASH<span className="text-primary">.SHOP</span>
+            <span>DONUTCASH<span className="text-primary">.SHOP</span></span>
           </a>
           <nav className="hidden items-center gap-6 text-xs font-semibold text-muted-foreground sm:flex">
             <a className="nav-link" href="#shop">SHOP</a>
@@ -149,7 +145,7 @@ export function Storefront() {
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Button asChild size="lg"><a href="#shop">Shop packages <ArrowRight /></a></Button>
-              <span className="text-sm text-muted-foreground"><strong className="text-foreground">1B = $20</strong> · instant order code</span>
+              <span className="text-sm text-muted-foreground"><strong className="text-foreground">1B = $30</strong> · instant order code</span>
             </div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-t border-border pt-5 text-xs font-semibold text-muted-foreground">
               <span className="flex items-center gap-2"><PackageCheck className="text-primary" /> 1,200+ delivered</span>
@@ -215,8 +211,8 @@ export function Storefront() {
                       <div className="text-right"><strong className="font-display text-3xl text-primary">${spawnerTotal.toFixed(2)}</strong><span className="block text-xs text-muted-foreground">{spawnerDiscount}% bulk discount</span></div>
                     </div>
                     <div className="mt-8 flex items-center gap-4">
-                      <input aria-label="Spawner quantity" type="range" min="1" max={SPAWNER_STOCK} value={spawners} onChange={(event) => setSpawners(Number(event.target.value))} className="min-w-0 flex-1 accent-primary" />
-                      <input aria-label="Spawner count" type="number" min="1" max={SPAWNER_STOCK} value={spawners} onChange={(event) => setSpawners(Math.min(SPAWNER_STOCK, Math.max(1, Number(event.target.value) || 1)))} className="store-input w-24 text-center" />
+                      <input aria-label="Spawner quantity" type="range" min="1" max={SPAWNER_STOCK} value={spawners} onChange={(event) => setSpawners(Number(event.target.value))} className="range-slider min-w-0 flex-1 basis-0" style={{ "--fill": `${((spawners - 1) / (SPAWNER_STOCK - 1)) * 100}%` } as React.CSSProperties} />
+                      <input aria-label="Spawner count" type="number" min="1" max={SPAWNER_STOCK} value={spawners} onChange={(event) => setSpawners(Math.min(SPAWNER_STOCK, Math.max(1, Number(event.target.value) || 1)))} className="store-input shrink-0 text-center" style={{ width: "6rem" }} />
                     </div>
                     <div className="mt-2 flex justify-between text-xs text-muted-foreground"><span>1 spawner</span><span>{SPAWNER_STOCK} in stock</span></div>
                     <Button className="mt-7 w-full" onClick={() => openOrder(`${spawners} skeleton spawners`, `$${spawnerTotal.toFixed(2)}`, `S${spawners}`)}>Get {spawners} spawners <ArrowRight /></Button>
@@ -235,7 +231,7 @@ export function Storefront() {
               <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
                 We checked over 100 other DonutSMP shops before setting our prices. Some charge twice what we do, some twenty times, and a few ask more than a hundred times as much for the same in-game money. We priced ourselves at the bottom and stayed there.
               </p>
-              <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-primary"><TrendingDown /> 1B for $20 — compare it anywhere.</div>
+              <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-primary"><TrendingDown /> 1B for $30 — compare it anywhere.</div>
             </div>
             <ul className="grid gap-px border border-border bg-border sm:grid-cols-3">
               {[["2x", "What many shops charge for the same amount"], ["20x", "What the bigger resellers ask on busy days"], ["100x", "What the worst listings we found were priced at"]].map(([figure, copy]) => (
@@ -306,19 +302,10 @@ export function Storefront() {
             <Button variant="ghost" size="icon" className="absolute right-3 top-3" onClick={closeModal} aria-label="Close order"><X /></Button>
 
             {loadingStep >= 0 ? (
-              <div>
-                <div className="grid size-11 place-items-center rounded-md bg-primary/12 text-primary"><Loader2 className="animate-spin" /></div>
-                <p className="eyebrow mt-5">PROCESSING</p>
-                <h2 className="mt-2 font-display text-2xl font-bold">Creating your order…</h2>
-                <ul className="mt-5 space-y-3">
-                  {loadingSteps.map((step, index) => (
-                    <li key={step} className={`flex items-center gap-3 text-sm ${index <= loadingStep ? "text-foreground" : "text-muted-foreground/50"}`}>
-                      {index < loadingStep ? <Check className="size-4 text-primary" /> : index === loadingStep ? <Loader2 className="size-4 animate-spin text-primary" /> : <span className="size-4 rounded-full border border-border" />}
-                      {step}
-                    </li>
-                  ))}
-                </ul>
-                <div className="progress-bar mt-6"><span /></div>
+              <div className="py-6 text-center">
+                <Loader2 className="mx-auto size-8 animate-spin text-primary" />
+                <h2 className="mt-4 font-display text-xl font-bold">Loading order…</h2>
+                <div className="progress-bar mt-5"><span /></div>
               </div>
             ) : order ? (
               <div className="animate-rise">

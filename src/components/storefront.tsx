@@ -22,17 +22,17 @@ type Order = { code: string; item: string; total: string };
 const DISCORD_URL = "https://discord.gg/9FHdCBQAx";
 const MONEY_STOCK = 1037; // in millions
 const SPAWNER_STOCK = 527;
-const BASE_RATE = 0.02857; // $ per million before discount
+const BASE_RATE = 0.042857; // $ per million before discount (1B = $30 after 30% off)
 
 const cashStack = "/images/cash-stack.png";
 const spawnerImage = "/images/skeleton-spawner.png";
 
 const packages = [
-  { amount: 100, label: "100M", price: 2.57, was: 2.86, discount: 10 },
-  { amount: 500, label: "500M", price: 11.43, was: 14.29, discount: 20 },
-  { amount: 1000, label: "1B", price: 20, was: 28.57, discount: 30, popular: true },
-  { amount: 2000, label: "2B", price: 40, was: 57.14, discount: 30 },
-  { amount: 5000, label: "5B", price: 100, was: 142.86, discount: 30 },
+  { amount: 100, label: "100M", price: 3.86, was: 4.29, discount: 10 },
+  { amount: 500, label: "500M", price: 17.14, was: 21.43, discount: 20 },
+  { amount: 1000, label: "1B", price: 30, was: 42.86, discount: 30, popular: true },
+  { amount: 2000, label: "2B", price: 60, was: 85.71, discount: 30 },
+  { amount: 5000, label: "5B", price: 150, was: 214.29, discount: 30 },
 ];
 
 const reviews = [
@@ -44,13 +44,11 @@ const reviews = [
 ];
 
 const faqs = [
-  ["How much does DonutSMP money cost?", "Our 1B package is $20. Smaller packages start at $2.57, and the more you buy the bigger the discount, up to 30%."],
+  ["How much does DonutSMP money cost?", "Our 1B package is $30. Smaller packages start at $3.86, and the more you buy the bigger the discount, up to 30%."],
   ["How fast is delivery?", "Most orders arrive in a few minutes. At busy times, a team member may need a little longer."],
   ["What do you need from me?", "Your exact Minecraft username and the order code we generate for you."],
   ["Is this safe?", "We never ask for your password. Every order is confirmed and delivered manually."],
 ];
-
-const loadingSteps = ["Reserving your amount", "Generating order code", "Notifying delivery team"];
 
 function makeCode(prefix: string) {
   const chars = Math.random().toString(36).slice(2, 8).toUpperCase();

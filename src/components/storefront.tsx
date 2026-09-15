@@ -211,8 +211,8 @@ export function Storefront() {
                       <div className="text-right"><strong className="font-display text-3xl text-primary">${spawnerTotal.toFixed(2)}</strong><span className="block text-xs text-muted-foreground">{spawnerDiscount}% bulk discount</span></div>
                     </div>
                     <div className="mt-8 flex items-center gap-4">
-                      <input aria-label="Spawner quantity" type="range" min="1" max={SPAWNER_STOCK} value={spawners} onChange={(event) => setSpawners(Number(event.target.value))} className="range-slider min-w-0 flex-1" style={{ "--fill": `${((spawners - 1) / (SPAWNER_STOCK - 1)) * 100}%` } as React.CSSProperties} />
-                      <input aria-label="Spawner count" type="number" min="1" max={SPAWNER_STOCK} value={spawners} onChange={(event) => setSpawners(Math.min(SPAWNER_STOCK, Math.max(1, Number(event.target.value) || 1)))} className="store-input w-24 text-center" />
+                      <input aria-label="Spawner quantity" type="range" min="1" max={SPAWNER_STOCK} value={spawners} onChange={(event) => setSpawners(Number(event.target.value))} className="range-slider min-w-0 flex-1 basis-0" style={{ "--fill": `${((spawners - 1) / (SPAWNER_STOCK - 1)) * 100}%` } as React.CSSProperties} />
+                      <input aria-label="Spawner count" type="number" min="1" max={SPAWNER_STOCK} value={spawners} onChange={(event) => setSpawners(Math.min(SPAWNER_STOCK, Math.max(1, Number(event.target.value) || 1)))} className="store-input shrink-0 text-center" style={{ width: "6rem" }} />
                     </div>
                     <div className="mt-2 flex justify-between text-xs text-muted-foreground"><span>1 spawner</span><span>{SPAWNER_STOCK} in stock</span></div>
                     <Button className="mt-7 w-full" onClick={() => openOrder(`${spawners} skeleton spawners`, `$${spawnerTotal.toFixed(2)}`, `S${spawners}`)}>Get {spawners} spawners <ArrowRight /></Button>

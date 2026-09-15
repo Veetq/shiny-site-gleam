@@ -145,7 +145,7 @@ export function Storefront() {
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Button asChild size="lg"><a href="#shop">Shop packages <ArrowRight /></a></Button>
-              <span className="text-sm text-muted-foreground"><strong className="text-foreground">1B = $20</strong> · instant order code</span>
+              <span className="text-sm text-muted-foreground"><strong className="text-foreground">1B = $30</strong> · instant order code</span>
             </div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-t border-border pt-5 text-xs font-semibold text-muted-foreground">
               <span className="flex items-center gap-2"><PackageCheck className="text-primary" /> 1,200+ delivered</span>
@@ -231,7 +231,7 @@ export function Storefront() {
               <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
                 We checked over 100 other DonutSMP shops before setting our prices. Some charge twice what we do, some twenty times, and a few ask more than a hundred times as much for the same in-game money. We priced ourselves at the bottom and stayed there.
               </p>
-              <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-primary"><TrendingDown /> 1B for $20 — compare it anywhere.</div>
+              <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-primary"><TrendingDown /> 1B for $30 — compare it anywhere.</div>
             </div>
             <ul className="grid gap-px border border-border bg-border sm:grid-cols-3">
               {[["2x", "What many shops charge for the same amount"], ["20x", "What the bigger resellers ask on busy days"], ["100x", "What the worst listings we found were priced at"]].map(([figure, copy]) => (

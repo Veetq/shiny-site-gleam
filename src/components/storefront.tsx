@@ -92,12 +92,10 @@ export function Storefront() {
     setLoadingStep(0);
     timers.current.forEach(window.clearTimeout);
     timers.current = [
-      window.setTimeout(() => setLoadingStep(1), 750),
-      window.setTimeout(() => setLoadingStep(2), 1500),
       window.setTimeout(() => {
         setLoadingStep(-1);
         setOrder({ code: makeCode(prefix), item, total });
-      }, 2350),
+      }, 900),
     ];
   }
 
@@ -304,19 +302,10 @@ export function Storefront() {
             <Button variant="ghost" size="icon" className="absolute right-3 top-3" onClick={closeModal} aria-label="Close order"><X /></Button>
 
             {loadingStep >= 0 ? (
-              <div>
-                <div className="grid size-11 place-items-center rounded-md bg-primary/12 text-primary"><Loader2 className="animate-spin" /></div>
-                <p className="eyebrow mt-5">PROCESSING</p>
-                <h2 className="mt-2 font-display text-2xl font-bold">Creating your order…</h2>
-                <ul className="mt-5 space-y-3">
-                  {loadingSteps.map((step, index) => (
-                    <li key={step} className={`flex items-center gap-3 text-sm ${index <= loadingStep ? "text-foreground" : "text-muted-foreground/50"}`}>
-                      {index < loadingStep ? <Check className="size-4 text-primary" /> : index === loadingStep ? <Loader2 className="size-4 animate-spin text-primary" /> : <span className="size-4 rounded-full border border-border" />}
-                      {step}
-                    </li>
-                  ))}
-                </ul>
-                <div className="progress-bar mt-6"><span /></div>
+              <div className="py-6 text-center">
+                <Loader2 className="mx-auto size-8 animate-spin text-primary" />
+                <h2 className="mt-4 font-display text-xl font-bold">Loading order…</h2>
+                <div className="progress-bar mt-5"><span /></div>
               </div>
             ) : order ? (
               <div className="animate-rise">

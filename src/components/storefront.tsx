@@ -118,7 +118,7 @@ export function Storefront() {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <a href="#top" className="flex items-center gap-2 font-display text-base font-extrabold">
             <span className="grid size-7 place-items-center rounded-md bg-primary text-primary-foreground">$</span>
-            DONUTCASH<span className="text-primary">.SHOP</span>
+            <span>DONUTCASH<span className="text-primary">.SHOP</span></span>
           </a>
           <nav className="hidden items-center gap-6 text-xs font-semibold text-muted-foreground sm:flex">
             <a className="nav-link" href="#shop">SHOP</a>
@@ -211,7 +211,7 @@ export function Storefront() {
                       <div className="text-right"><strong className="font-display text-3xl text-primary">${spawnerTotal.toFixed(2)}</strong><span className="block text-xs text-muted-foreground">{spawnerDiscount}% bulk discount</span></div>
                     </div>
                     <div className="mt-8 flex items-center gap-4">
-                      <input aria-label="Spawner quantity" type="range" min="1" max={SPAWNER_STOCK} value={spawners} onChange={(event) => setSpawners(Number(event.target.value))} className="min-w-0 flex-1 accent-primary" />
+                      <input aria-label="Spawner quantity" type="range" min="1" max={SPAWNER_STOCK} value={spawners} onChange={(event) => setSpawners(Number(event.target.value))} className="range-slider min-w-0 flex-1" style={{ "--fill": `${((spawners - 1) / (SPAWNER_STOCK - 1)) * 100}%` } as React.CSSProperties} />
                       <input aria-label="Spawner count" type="number" min="1" max={SPAWNER_STOCK} value={spawners} onChange={(event) => setSpawners(Math.min(SPAWNER_STOCK, Math.max(1, Number(event.target.value) || 1)))} className="store-input w-24 text-center" />
                     </div>
                     <div className="mt-2 flex justify-between text-xs text-muted-foreground"><span>1 spawner</span><span>{SPAWNER_STOCK} in stock</span></div>

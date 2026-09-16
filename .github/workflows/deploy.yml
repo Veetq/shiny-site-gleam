@@ -22,13 +22,30 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bun run build:static
+      - name: Locate build output
+        run: |
+          # The static export normally lands in dist/client, but fall back to
+          # other common output dirs so a layout change can't break the deploy.
+          if [ -f dist/client/index.html ]; then
+            echo "SITE_DIR=dist/client" >> "$GITHUB_ENV"
+          elif [ -f .output/public/index.html ]; then
+            echo "SITE_DIR=.output/public" >> "$GITHUB_ENV"
+          elif [ -f dist/index.html ]; then
+            echo "SITE_DIR=dist" >> "$GITHUB_ENV"
+          else
+            echo "Could not find index.html in any expected output dir:"
+            find . -maxdepth 3 -name index.html -not -path './node_modules/*' || true
+            ls -la dist 2>/dev/null || true
+            exit 1
+          fi
+          echo "Using site dir: $SITE_DIR"
       - name: Add SPA fallback + Jekyll opt-out
         run: |
-          cp dist/client/index.html dist/client/404.html
-          touch dist/client/.nojekyll
+          cp "$SITE_DIR/index.html" "$SITE_DIR/404.html"
+          touch "$SITE_DIR/.nojekyll"
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist/client
+          path: ${{ env.SITE_DIR }}
 
   deploy:
     needs: build

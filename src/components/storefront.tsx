@@ -325,7 +325,7 @@ export function Storefront() {
                 <div className="mt-5 border border-primary/30 bg-primary/8 p-4 text-center">
                   <span className="text-[10px] font-bold tracking-[.2em] text-muted-foreground">ORDER ID</span>
                   <code className="mt-2 block break-all font-display text-2xl font-bold tracking-wider text-primary">{order.code}</code>
-                  <Button size="sm" variant="secondary" className="mt-4" onClick={copyCode}>{copied ? <Check /> : <Copy />}{copied ? "Copied" : "Copy code"}</Button>
+                  <Button size="lg" className="mt-4 w-full gap-2 text-sm font-bold" onClick={copyCode}>{copied ? <Check /> : <Copy />}{copied ? "Copied!" : "Copy order ID"}</Button>
                 </div>
                 <div className="mt-4 flex justify-between border border-border bg-background p-3 text-xs text-muted-foreground">
                   <span>{order.item}</span><strong className="text-foreground">{order.total}</strong>

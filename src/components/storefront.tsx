@@ -170,11 +170,20 @@ export function Storefront() {
                 <span className={`stock-pill ${product === "money" ? "" : "stock-pill-hidden"}`}>
                   <span className="status-dot" /> {MONEY_STOCK.toLocaleString()}M in stock
                 </span>
-                <div className="flex w-full max-w-xs border border-border bg-background p-1 sm:w-auto">
+                <div className="relative flex w-full max-w-xs border border-border bg-background p-1 sm:w-auto">
+                  <span
+                    aria-hidden
+                    className={`tab-liquid ${product === "spawners" ? "tab-liquid-right" : ""}`}
+                  />
                   {(["money", "spawners"] as Product[]).map((item) => (
-                    <Button key={item} size="sm" variant={product === item ? "default" : "ghost"} className="flex-1 sm:w-32" onClick={() => setProduct(item)}>
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setProduct(item)}
+                      className={`relative z-10 h-9 flex-1 px-4 font-display text-sm font-bold transition-colors duration-300 sm:w-32 ${product === item ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                    >
                       {item === "money" ? "$ Money" : "◆ Spawners"}
-                    </Button>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -299,7 +308,7 @@ export function Storefront() {
       {(loadingStep >= 0 || order) && (
         <div className="modal-backdrop fixed inset-0 z-50 grid place-items-center bg-background/85 p-4 backdrop-blur-md" role="dialog" aria-modal="true">
           <div className="modal-card relative w-full max-w-md border border-primary/35 bg-card p-6 shadow-2xl">
-            <Button variant="ghost" size="icon" className="absolute right-3 top-3" onClick={closeModal} aria-label="Close order"><X /></Button>
+            <Button variant="ghost" size="icon" className="absolute right-3 top-3 z-10" onClick={closeModal} aria-label="Close order"><X className="pointer-events-none" /></Button>
 
             {loadingStep >= 0 ? (
               <div className="py-6 text-center">

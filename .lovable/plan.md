@@ -1,53 +1,75 @@
 # SellAuth crypto checkout on the site
 
-Goal: clicking a "Get 1B" (or custom amount) button shows payment on your own site — crypto address, amount, QR, live status — instead of sending people to a SellAuth page. Discord stays, but only as optional support.
+Goal: clicking a "Get 1B" (or custom amount) button shows payment on your own site — crypto address, amount, QR, live status — instead of sending people to a SellAuth page. Discord stays as optional support only.
 
 **Status: waiting on you for the SellAuth API key and Shop ID. Nothing is built until you send them.**
 
 ## Hosting decision (yours): option 2
 
-The site stays on GitHub Pages with your custom domain (free). The checkout server lives here (also free), and the page calls it when someone buys. Two places to manage, but both free. I'll handle the cross-site connection; the server URL is stable and the GitHub workflow needs no changes.
+The site stays on GitHub Pages with your custom domain (free). The checkout server lives here (also free), and the page calls it when someone buys. I handle the cross-site connection; the GitHub workflow needs no changes.
 
-## Why a server is needed at all
+## Why a server is needed
 
-SellAuth checkouts are created with your secret API key. Anything in the website files is public, so a pure GitHub Pages site cannot hold that key — anyone could read it and create orders as you.
+SellAuth checkouts are created with your secret API key. Anything in the website files is public, so GitHub Pages alone cannot hold that key.
 
 ## What I need from you
 
 1. SellAuth **API key** and **Shop ID** (stored as protected secrets, never in code).
-2. Which crypto coins you want offered (BTC, LTC, ETH, SOL, USDT…).
-3. Whether the buyer must enter their Minecraft username before paying — recommended yes, since you deliver in-game.
+2. Your **Discord webhook URL** for the channel where order alerts should land.
+3. Which crypto coins you want offered (BTC, LTC, ETH, SOL, USDT…).
+4. Confirm buyers must enter their Minecraft username before paying (recommended).
 
 ## Flow after the change
 
 ```text
-pick amount  ->  enter Minecraft username (+ email if SellAuth needs it)
-             ->  site creates the SellAuth order (server-side, key hidden)
-             ->  payment panel on our page: coin choice, address, QR, amount, timer
-             ->  status polls until paid
-             ->  "Paid!" screen with order ID  (Discord button optional, support only)
+pick amount -> enter Minecraft username -> site creates SellAuth order (key hidden)
+-> payment panel on our page: coin choice, address, QR, amount, timer
+-> status polls until paid
+-> progress tracker: Order received -> Delivering -> Delivered
 ```
 
-## Delivery — answering your question
+## Post-payment progress tracker
 
-You're right: you don't need the buyer to join Discord. When a payment completes, SellAuth notifies you (email/dashboard, and I'll also set up a **Discord webhook** so a message lands in your channel with the Minecraft username, item, and amount paid). You then deliver in-game — the "Join Discord" button becomes purely optional help/support, not part of the delivery.
+Once payment lands, the customer stays on our page and sees a live three-step tracker:
 
-## Pricing, including the custom amount
+1. **Order received** — thanks for buying, payment confirmed, order ID shown.
+2. **Delivering** — we're sending your money/spawners in-game.
+3. **Delivered** — done, with a thanks + optional "leave a review / join Discord" link.
 
-Your existing scale (10% off at 100M rising to 30% at 1B+) keeps living on the site. The server recalculates the price from the requested amount before creating the order, so a tampered page cannot buy 5B for $1. Fixed packages map to fixed SellAuth products; the custom amount uses a variable-price order created through the API.
+The page checks status every few seconds, so the steps advance by themselves as you act.
 
-## Orders
+## Discord alert with a button you press
 
-Paid orders are stored (order ID, item, amount, username, status) so you get an admin list of what to deliver, and stock counters can decrease automatically. A SellAuth webhook marks orders paid server-side — the page alone is never trusted for that.
+When a payment completes, a message is posted to your Discord channel with the order ID, Minecraft username, item, amount paid and coin — plus buttons:
+
+- **Delivering** — moves the customer's tracker to step 2.
+- **Mark delivered** — moves it to step 3 and edits the Discord message to show "Delivered by <you>".
+
+This needs a Discord application (free, made in Discord's developer portal) so the buttons can call back to our server; I'll walk you through creating it and adding its key. If you'd rather skip that, the fallback is a private admin page on the site with the same two buttons — no Discord app needed.
+
+## SellAuth product setup — answers
+
+- **Category**: yes, "Game top-up" fits fine; the category only affects how it's listed.
+- **Deliverables Type**: choose **Service**. You deliver manually in-game, stock is set by you (or infinite), and the order stays "Paid" until you mark it complete — exactly your flow. Not Serials (that's for pre-made codes), not Dynamic (that auto-generates keys from a webhook), not Files/Physical.
+- **Instructions field**: something like — "Thanks for your order! Your order ID is shown above. Make sure you're online in DonutSMP as the username you entered; we deliver within minutes. Need help? Join discord.gg/9FHdCBQAx."
+- **Variants**: one product "DonutSMP Money" with variants 100M ($3.86), 500M ($17.14), 1B ($30), 2B ($60), 5B ($150); one product "Spawners" priced per unit ($0.40) with Min 1 / Max = stock. Set **Slashed Price** to the "was" price so the discount shows.
+- **Stock**: set to your real stock (1,037M money units / 527 spawners) so SellAuth can't oversell.
+- **Custom amount**: created through the API at a server-calculated price, so it doesn't need its own variant.
+- Leave subscriptions, cashback, files and Discord auto-role off.
+
+## Pricing
+
+Your existing scale (10% off at 100M rising to 30% at 1B+) stays. The server recalculates price from the requested amount before creating the order, so a tampered page cannot buy 5B for $1.
 
 ## Technical notes
 
-- Server functions here: `createCheckout` (validates amount, recomputes price, calls SellAuth) and `getOrderStatus` (polls). CORS allows your GitHub Pages domain only.
-- Public route `src/routes/api/public/sellauth-webhook.ts` verifies the SellAuth signature, marks the order paid, and fires your Discord webhook with delivery details.
-- Lovable Cloud enabled for the `orders` table and secrets.
-- Storefront buy buttons swap the current fake order-code modal for the real checkout panel.
-- First build step is a verification: confirm SellAuth's API supports custom-price invoices and returns raw crypto address/QR data. If it only returns a hosted link, fallback is that link inside a modal on our domain — I'll tell you before building either way.
+- Server functions: `createCheckout` (validate amount, recompute price, call SellAuth), `getOrderStatus` (poll). CORS restricted to your GitHub Pages domain.
+- `src/routes/api/public/sellauth-webhook.ts` — verifies SellAuth signature, marks order paid, posts the Discord alert.
+- `src/routes/api/public/discord-interactions.ts` — verifies Discord's Ed25519 signature, handles the button presses, updates order status.
+- Lovable Cloud enabled for the `orders` table (id, code, item, amount, username, price, status, timestamps) and secrets.
+- Storefront buy buttons replace the current fake order-code modal with the real checkout + tracker panel.
+- First build step verifies SellAuth's API supports custom-price invoices and returns raw crypto address/QR data; if it only returns a hosted link, fallback is that link in a modal on our domain — I'll tell you before building.
 
 ## Out of scope
 
-No changes to layout, copy, or animations beyond the checkout area. Tebex remains untouched.
+No layout, copy or animation changes beyond the checkout area. Tebex untouched.

@@ -219,7 +219,7 @@ export function Storefront() {
                       <article key={item.label} style={{ "--delay": `${index * 50}ms` } as React.CSSProperties} className={`product-card stagger-in ${item.popular ? "featured-card" : ""}`}>
                         <div className="flex items-center justify-between"><span className="text-xs font-bold text-muted-foreground">DONUTSMP MONEY</span><span className="sale-tag">-{item.discount}%</span></div>
                         <div className="mt-5 flex items-end justify-between gap-4"><strong className="font-display text-4xl">{item.label}</strong><div className="text-right"><strong className="block font-display text-2xl text-primary">${item.price.toFixed(2)}</strong><span className="text-xs text-muted-foreground line-through">${item.was.toFixed(2)}</span></div></div>
-                        <Button className="mt-5 w-full" variant={item.popular ? "default" : "secondary"} onClick={() => openOrder(`${item.label} DonutSMP money`, `$${item.price.toFixed(2)}`, `C${item.amount}`)}>Get {item.label} <ArrowRight /></Button>
+                        <Button className="mt-5 w-full" variant={item.popular ? "default" : "secondary"} onClick={() => openOrder("money", item.amount, `${item.label} DonutSMP money`, `$${item.price.toFixed(2)}`)}>Get {item.label} <ArrowRight /></Button>
                         {item.popular && <span className="popular-flag"><Sparkles /> MOST POPULAR</span>}
                       </article>
                     ))}
@@ -227,7 +227,7 @@ export function Storefront() {
                       <div className="flex items-center justify-between"><span className="text-xs font-bold text-muted-foreground">CUSTOM AMOUNT</span><span className="sale-tag">-{customDiscount || 10}%</span></div>
                       <label className="mt-4 block text-xs font-semibold" htmlFor="custom">50M — 10B · bigger order, bigger discount</label>
                       <input id="custom" className="store-input mt-2" value={custom} onChange={(event) => setCustom(event.target.value)} placeholder="e.g. 2.5b" />
-                      <Button className="mt-4 w-full" disabled={!customAmount} onClick={() => customAmount && openOrder(`${custom.toUpperCase()} DonutSMP money`, `$${customPrice.toFixed(2)}`, `C${customAmount}`)}>{customAmount ? `$${customPrice.toFixed(2)} · Continue` : "Enter a valid amount"}</Button>
+                      <Button className="mt-4 w-full" disabled={!customAmount} onClick={() => customAmount && openOrder("money", customAmount, `${custom.toUpperCase()} DonutSMP money`, `$${customPrice.toFixed(2)}`)}>{customAmount ? `$${customPrice.toFixed(2)} · Continue` : "Enter a valid amount"}</Button>
                     </article>
                   </div>
                 </div>
@@ -246,7 +246,7 @@ export function Storefront() {
                       <input aria-label="Spawner count" type="number" min="1" max={SPAWNER_STOCK} value={spawners} onChange={(event) => setSpawners(Math.min(SPAWNER_STOCK, Math.max(1, Number(event.target.value) || 1)))} className="store-input shrink-0 text-center" style={{ width: "6rem" }} />
                     </div>
                     <div className="mt-2 flex justify-between text-xs text-muted-foreground"><span>1 spawner</span><span>{SPAWNER_STOCK} in stock</span></div>
-                    <Button className="mt-7 w-full" onClick={() => openOrder(`${spawners} skeleton spawners`, `$${spawnerTotal.toFixed(2)}`, `S${spawners}`)}>Get {spawners} spawners <ArrowRight /></Button>
+                    <Button className="mt-7 w-full" onClick={() => openOrder("spawners", spawners, `${spawners} skeleton spawners`, `$${spawnerTotal.toFixed(2)}`)}>Get {spawners} spawners <ArrowRight /></Button>
                   </div>
                 </div>
               )}

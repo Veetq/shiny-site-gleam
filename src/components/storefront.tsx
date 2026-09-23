@@ -15,9 +15,12 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { createPayment } from "@/lib/checkout-client";
 
 type Product = "money" | "spawners";
-type Order = { code: string; item: string; total: string };
+type Pending = { product: Product; amount: number; item: string; total: string };
+type Order = { code: string; item: string; total: string; invoiceUrl: string };
+
 
 const DISCORD_URL = "https://discord.gg/9FHdCBQAx";
 const MONEY_STOCK = 1037; // in millions
@@ -50,10 +53,6 @@ const faqs = [
   ["Is this safe?", "We never ask for your password. Every order is confirmed and delivered manually."],
 ];
 
-function makeCode(prefix: string) {
-  const chars = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `${prefix}-${chars}`;
-}
 
 /** 10% off at 100M, scaling linearly up to 30% off at 1B and above. */
 function discountFor(millions: number) {
@@ -66,8 +65,11 @@ export function Storefront() {
   const [product, setProduct] = useState<Product>("money");
   const [custom, setCustom] = useState("1b");
   const [spawners, setSpawners] = useState(20);
+  const [pending, setPending] = useState<Pending | null>(null);
+  const [username, setUsername] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
-  const [loadingStep, setLoadingStep] = useState(-1);
   const [copied, setCopied] = useState(false);
   const timers = useRef<number[]>([]);
 
@@ -86,23 +88,42 @@ export function Storefront() {
   const spawnerDiscount = Math.min(30, Math.round(Math.max(0, spawners - 20) * 0.375));
   const spawnerTotal = spawners * 0.4 * (1 - spawnerDiscount / 100);
 
-  function openOrder(item: string, total: string, prefix: string) {
+  function openOrder(productKind: Product, amount: number, item: string, total: string) {
     setCopied(false);
+    setError(null);
     setOrder(null);
-    setLoadingStep(0);
-    timers.current.forEach(window.clearTimeout);
-    timers.current = [
-      window.setTimeout(() => {
-        setLoadingStep(-1);
-        setOrder({ code: makeCode(prefix), item, total });
-      }, 900),
-    ];
+    setPending({ product: productKind, amount, item, total });
+  }
+
+  async function startPayment() {
+    if (!pending || submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const result = await createPayment({
+        product: pending.product,
+        amount: pending.amount,
+        username: username.trim(),
+      });
+      setOrder({
+        code: result.orderCode,
+        item: result.item,
+        total: `$${result.price.toFixed(2)}`,
+        invoiceUrl: result.invoiceUrl,
+      });
+      window.open(result.invoiceUrl, "_blank", "noopener,noreferrer");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function closeModal() {
     timers.current.forEach(window.clearTimeout);
-    setLoadingStep(-1);
+    setPending(null);
     setOrder(null);
+    setError(null);
   }
 
   async function copyCode() {
@@ -111,6 +132,7 @@ export function Storefront() {
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1500);
   }
+
 
   return (
     <div className="min-h-screen overflow-hidden bg-background text-foreground">

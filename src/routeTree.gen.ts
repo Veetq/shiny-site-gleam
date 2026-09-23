@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicCreatePaymentRouteImport } from './routes/api/public/create-payment'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCreatePaymentRoute = ApiPublicCreatePaymentRouteImport.update({
+  id: '/api/public/create-payment',
+  path: '/api/public/create-payment',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/create-payment': typeof ApiPublicCreatePaymentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/create-payment': typeof ApiPublicCreatePaymentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/create-payment': typeof ApiPublicCreatePaymentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/public/create-payment'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/public/create-payment'
+  id: '__root__' | '/' | '/api/public/create-payment'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicCreatePaymentRoute: typeof ApiPublicCreatePaymentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/create-payment': {
+      id: '/api/public/create-payment'
+      path: '/api/public/create-payment'
+      fullPath: '/api/public/create-payment'
+      preLoaderRoute: typeof ApiPublicCreatePaymentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicCreatePaymentRoute: ApiPublicCreatePaymentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

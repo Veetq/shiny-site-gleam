@@ -15,9 +15,12 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { createPayment } from "@/lib/checkout-client";
 
 type Product = "money" | "spawners";
-type Order = { code: string; item: string; total: string };
+type Pending = { product: Product; amount: number; item: string; total: string };
+type Order = { code: string; item: string; total: string; invoiceUrl: string };
+
 
 const DISCORD_URL = "https://discord.gg/9FHdCBQAx";
 const MONEY_STOCK = 1037; // in millions
@@ -50,10 +53,6 @@ const faqs = [
   ["Is this safe?", "We never ask for your password. Every order is confirmed and delivered manually."],
 ];
 
-function makeCode(prefix: string) {
-  const chars = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `${prefix}-${chars}`;
-}
 
 /** 10% off at 100M, scaling linearly up to 30% off at 1B and above. */
 function discountFor(millions: number) {
@@ -66,8 +65,11 @@ export function Storefront() {
   const [product, setProduct] = useState<Product>("money");
   const [custom, setCustom] = useState("1b");
   const [spawners, setSpawners] = useState(20);
+  const [pending, setPending] = useState<Pending | null>(null);
+  const [username, setUsername] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
-  const [loadingStep, setLoadingStep] = useState(-1);
   const [copied, setCopied] = useState(false);
   const timers = useRef<number[]>([]);
 
@@ -86,23 +88,42 @@ export function Storefront() {
   const spawnerDiscount = Math.min(30, Math.round(Math.max(0, spawners - 20) * 0.375));
   const spawnerTotal = spawners * 0.4 * (1 - spawnerDiscount / 100);
 
-  function openOrder(item: string, total: string, prefix: string) {
+  function openOrder(productKind: Product, amount: number, item: string, total: string) {
     setCopied(false);
+    setError(null);
     setOrder(null);
-    setLoadingStep(0);
-    timers.current.forEach(window.clearTimeout);
-    timers.current = [
-      window.setTimeout(() => {
-        setLoadingStep(-1);
-        setOrder({ code: makeCode(prefix), item, total });
-      }, 900),
-    ];
+    setPending({ product: productKind, amount, item, total });
+  }
+
+  async function startPayment() {
+    if (!pending || submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const result = await createPayment({
+        product: pending.product,
+        amount: pending.amount,
+        username: username.trim(),
+      });
+      setOrder({
+        code: result.orderCode,
+        item: result.item,
+        total: `$${result.price.toFixed(2)}`,
+        invoiceUrl: result.invoiceUrl,
+      });
+      window.open(result.invoiceUrl, "_blank", "noopener,noreferrer");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function closeModal() {
     timers.current.forEach(window.clearTimeout);
-    setLoadingStep(-1);
+    setPending(null);
     setOrder(null);
+    setError(null);
   }
 
   async function copyCode() {
@@ -111,6 +132,7 @@ export function Storefront() {
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1500);
   }
+
 
   return (
     <div className="min-h-screen overflow-hidden bg-background text-foreground">
@@ -197,7 +219,7 @@ export function Storefront() {
                       <article key={item.label} style={{ "--delay": `${index * 50}ms` } as React.CSSProperties} className={`product-card stagger-in ${item.popular ? "featured-card" : ""}`}>
                         <div className="flex items-center justify-between"><span className="text-xs font-bold text-muted-foreground">DONUTSMP MONEY</span><span className="sale-tag">-{item.discount}%</span></div>
                         <div className="mt-5 flex items-end justify-between gap-4"><strong className="font-display text-4xl">{item.label}</strong><div className="text-right"><strong className="block font-display text-2xl text-primary">${item.price.toFixed(2)}</strong><span className="text-xs text-muted-foreground line-through">${item.was.toFixed(2)}</span></div></div>
-                        <Button className="mt-5 w-full" variant={item.popular ? "default" : "secondary"} onClick={() => openOrder(`${item.label} DonutSMP money`, `$${item.price.toFixed(2)}`, `C${item.amount}`)}>Get {item.label} <ArrowRight /></Button>
+                        <Button className="mt-5 w-full" variant={item.popular ? "default" : "secondary"} onClick={() => openOrder("money", item.amount, `${item.label} DonutSMP money`, `$${item.price.toFixed(2)}`)}>Get {item.label} <ArrowRight /></Button>
                         {item.popular && <span className="popular-flag"><Sparkles /> MOST POPULAR</span>}
                       </article>
                     ))}
@@ -205,7 +227,7 @@ export function Storefront() {
                       <div className="flex items-center justify-between"><span className="text-xs font-bold text-muted-foreground">CUSTOM AMOUNT</span><span className="sale-tag">-{customDiscount || 10}%</span></div>
                       <label className="mt-4 block text-xs font-semibold" htmlFor="custom">50M — 10B · bigger order, bigger discount</label>
                       <input id="custom" className="store-input mt-2" value={custom} onChange={(event) => setCustom(event.target.value)} placeholder="e.g. 2.5b" />
-                      <Button className="mt-4 w-full" disabled={!customAmount} onClick={() => customAmount && openOrder(`${custom.toUpperCase()} DonutSMP money`, `$${customPrice.toFixed(2)}`, `C${customAmount}`)}>{customAmount ? `$${customPrice.toFixed(2)} · Continue` : "Enter a valid amount"}</Button>
+                      <Button className="mt-4 w-full" disabled={!customAmount} onClick={() => customAmount && openOrder("money", customAmount, `${custom.toUpperCase()} DonutSMP money`, `$${customPrice.toFixed(2)}`)}>{customAmount ? `$${customPrice.toFixed(2)} · Continue` : "Enter a valid amount"}</Button>
                     </article>
                   </div>
                 </div>
@@ -224,7 +246,7 @@ export function Storefront() {
                       <input aria-label="Spawner count" type="number" min="1" max={SPAWNER_STOCK} value={spawners} onChange={(event) => setSpawners(Math.min(SPAWNER_STOCK, Math.max(1, Number(event.target.value) || 1)))} className="store-input shrink-0 text-center" style={{ width: "6rem" }} />
                     </div>
                     <div className="mt-2 flex justify-between text-xs text-muted-foreground"><span>1 spawner</span><span>{SPAWNER_STOCK} in stock</span></div>
-                    <Button className="mt-7 w-full" onClick={() => openOrder(`${spawners} skeleton spawners`, `$${spawnerTotal.toFixed(2)}`, `S${spawners}`)}>Get {spawners} spawners <ArrowRight /></Button>
+                    <Button className="mt-7 w-full" onClick={() => openOrder("spawners", spawners, `${spawners} skeleton spawners`, `$${spawnerTotal.toFixed(2)}`)}>Get {spawners} spawners <ArrowRight /></Button>
                   </div>
                 </div>
               )}
